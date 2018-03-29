@@ -8,10 +8,6 @@
   <!-- LLVM+cross common -->
   <PropertyGroup>
     <_CrossOutputDirTop>$([System.IO.Path]::GetFullPath ('$(IntermediateOutputPath)'))</_CrossOutputDirTop>
-    <_MingwCc32>$(MingwCommandPrefix32)-gcc</_MingwCc32>
-    <_MingwCxx32>$(MingwCommandPrefix32)-g++</_MingwCxx32>
-    <_MingwCc64>$(MingwCommandPrefix64)-gcc</_MingwCc64>
-    <_MingwCxx64>$(MingwCommandPrefix64)-g++</_MingwCxx64>
     <_MingwTriplet32>i686-w64-mingw32$(_MingwPrefixTail)</_MingwTriplet32>
     <_MingwTriplet64>x86_64-w64-mingw32$(_MingwPrefixTail)</_MingwTriplet64>
 
