@@ -56,8 +56,14 @@ clear_time_zone_caches (MonoDomain *domain, void *user_data)
 	mono->mono_thread_create (domain, clear_time_zone_caches_within_domain, mono);
 }
 
-JNIEXPORT void
-JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged (JNIEnv *env, jclass klass)
+JNIEXPORT void JNICALL
+Java_mono_android_Runtime_notifyTimeZoneChanged (JNIEnv *env, jclass klass)
+{
+	monodroid_runtime_notifyTimeZoneChanged (env, klass);
+}
+
+MONO_API void
+monodroid_runtime_notifyTimeZoneChanged (JNIEnv *env, jclass klass)
 {
 	struct DylibMono *mono  = monodroid_get_dylib ();
 

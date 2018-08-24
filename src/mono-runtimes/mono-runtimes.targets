@@ -168,9 +168,10 @@
       Outputs="@(_LlvmSourceBinary)">
     <ItemGroup>
       <_PackageLlvm Include="package-llvm-%(_LlvmRuntime.Identity)" />
+      <_PackageOptionsLlvm Include="%(_LlvmRuntime.PackageOptions)" />
     </ItemGroup>
     <Exec
-        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_PackageLlvm, ' ') $(_MonoSdksParameters) %(_LlvmRuntime.PackageOptions)"
+        Command="make DISABLE_IOS=1 $(MakeConcurrency) @(_PackageLlvm, ' ') $(_MonoSdksParameters) @(_PackageOptionsLlvm, ' ')"
         IgnoreStandardErrorWarningFormat="True"
         WorkingDirectory="$(MonoSourceFullPath)\sdks\builds"
     />

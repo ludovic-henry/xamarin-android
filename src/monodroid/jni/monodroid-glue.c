@@ -493,7 +493,7 @@ get_libmonosgen_path (const char *primary_override_dir, const char *external_ove
 	log_fatal (LOG_DEFAULT, "Please either set android:minSdkVersion >= 10 or use a build without the shared runtime (like default Release configuration).");
 	exit (FATAL_EXIT_CANNOT_FIND_LIBMONOSGEN);
 
-	return libmonoso;
+	return NULL;
 }
 
 typedef void* (*mono_mkbundle_init_ptr) (void (*)(const MonoBundledAssembly **), void (*)(const char* assembly_name, const char* config_xml),void (*) (int mode));
@@ -1984,8 +1984,8 @@ init_max_gref_count (void)
 	max_gref_count = max;
 }
 
-JNIEXPORT jint JNICALL
-JNI_OnLoad (JavaVM *vm, void *reserved)
+void
+monodroid_jvm_initialize (JavaVM *vm)
 {
 	JNIEnv *env;
 	jobject lref;
@@ -2019,7 +2019,12 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 	(*env)->DeleteLocalRef (env, System_javaVersionArg);
 	(*env)->DeleteLocalRef (env, System_javaVersion);
 	(*env)->DeleteLocalRef (env, System_class);
+}
 
+JNIEXPORT jint JNICALL
+JNI_OnLoad (JavaVM *vm, void *reserved)
+{
+	monodroid_jvm_initialize (vm);
 	return JNI_VERSION_1_6;
 }
 
@@ -3626,6 +3631,12 @@ init_categories (const char *override_dir)
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApks, jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader, jobjectArray externalStorageDirs, jobjectArray assemblies, jstring packageName)
 {
+	monodroid_runtime_init (env, klass, lang, runtimeApks, runtimeNativeLibDir, appDirs, loader, externalStorageDirs, assemblies, packageName);
+}
+
+MONO_API void
+monodroid_runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApks, jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader, jobjectArray externalStorageDirs, jobjectArray assemblies, jstring packageName)
+{
 	char *runtime_args = NULL;
 	char *connect_args;
 	const char *libdir, *esd;
@@ -3815,8 +3826,14 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 	}
 }
 
-JNIEXPORT void
-JNICALL Java_mono_android_Runtime_register (JNIEnv *env, jclass klass, jstring managedType, jclass nativeClass, jstring methods)
+JNIEXPORT void JNICALL
+Java_mono_android_Runtime_register (JNIEnv *env, jclass klass, jstring managedType, jclass nativeClass, jstring methods)
+{
+	monodroid_runtime_register(env, klass, managedType, nativeClass, methods);
+}
+
+MONO_API void
+monodroid_runtime_register (JNIEnv *env, jclass klass, jstring managedType, jclass nativeClass, jstring methods)
 {
 	int managedType_len, methods_len;
 	const jchar *managedType_ptr, *methods_ptr;
@@ -3874,8 +3891,14 @@ reinitialize_android_runtime_type_manager (JNIEnv *env)
 	(*env)->DeleteLocalRef (env, typeManager);
 }
 
-JNIEXPORT jint
-JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, jobjectArray runtimeApks, jobjectArray assemblies, jobject loader)
+JNIEXPORT jint JNICALL
+Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, jobjectArray runtimeApks, jobjectArray assemblies, jobject loader)
+{
+	monodroid_runtime_createNewContext (env, klass, runtimeApks, assemblies, loader);
+}
+
+MONO_API jint
+monodroid_runtime_createNewContext (JNIEnv *env, jclass klass, jobjectArray runtimeApks, jobjectArray assemblies, jobject loader)
 {
 	log_info (LOG_DEFAULT, "CREATING NEW CONTEXT");
 	reinitialize_android_runtime_type_manager (env);
@@ -3889,8 +3912,14 @@ JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, j
 	return domain_id;
 }
 
-JNIEXPORT void
-JNICALL Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass klass, jint contextID)
+JNIEXPORT void JNICALL
+Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass klass, jint contextID)
+{
+	monodroid_runtime_switchToContext (env, klass, contextID);
+}
+
+MONO_API void
+monodroid_runtime_switchToContext (JNIEnv *env, jclass klass, jint contextID)
 {
 	log_info (LOG_DEFAULT, "SWITCHING CONTEXT");
 	MonoDomain *domain = mono.mono_domain_get_by_id ((int)contextID);
@@ -3902,8 +3931,14 @@ JNICALL Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass klass, ji
 	current_context_id = (int)contextID;
 }
 
-JNIEXPORT void
-JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, jintArray array)
+JNIEXPORT void JNICALL
+Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, jintArray array)
+{
+	monodroid_runtime_destroyContexts (env, klass, array);
+}
+
+MONO_API void
+monodroid_runtime_destroyContexts (JNIEnv *env, jclass klass, jintArray array)
 {
 	MonoDomain *root_domain = mono.mono_get_root_domain ();
 	mono.mono_jit_thread_attach (root_domain);
@@ -3955,13 +3990,18 @@ JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, ji
 	log_info (LOG_DEFAULT, "All domain cleaned up");
 }
 
-JNIEXPORT void
-JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, jclass klass, jobject javaThread, jthrowable javaException)
+JNIEXPORT void JNICALL
+Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, jclass klass, jobject javaThread, jthrowable javaException)
+{
+	monodroid_runtime_propagateUncaughtException (env, klass, javaThread, javaException);
+}
+
+MONO_API void
+monodroid_runtime_propagateUncaughtException (JNIEnv *env, jclass klass, jobject javaThread, jthrowable javaException)
 {
 	MonoDomain *domain = mono.mono_domain_get ();
 	propagate_uncaught_exception (domain, env, javaThread, javaException);
 }
-
 
 #include "config.include"
 #include "machine.config.include"
